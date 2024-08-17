@@ -236,6 +236,3 @@ def first_layer(gcode_path):
     print(f"First layer is {first_layer}")
 
     return first_layer
-
-def server():
-    
