@@ -2,7 +2,8 @@ import gcodie as gc
 
 gcode_path = 'test.gcode'  # Replace with your G-code file path
 output_dir = 'frames'
-layer = 500  # Layer to visualize (0-indexed)
+layer = 528  # Layer to visualize (0-indexed)
+count = 10
 
 # Parse G-code to get the print path
 
@@ -17,7 +18,14 @@ gc.last_layer(gcode_path)
 
 gc.generate_layer_img(layer ,x, y, z, output_dir)
 
-gc.generate_multiple_layers(10, x, y, z, output_dir)
+gc.generate_multiple_layers(count, x, y, z, output_dir)
+
+
+# pridat detekci 0 point layeru na single image
+#Last layer is 528
+#Error: Layer 528 is out of range. The model has 528 layers.
+
+
 
 
 

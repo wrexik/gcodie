@@ -202,21 +202,16 @@ def generate_multiple_layers(count, x, y, z, output_dir, image_size=(800, 800)):
                 img.save(os.path.join(output_dir, f'layer_{file_number:03d}.png')) 
                 
             file_number += 1  # Increment file number for each image
-        print(f"{count - skip}/{count} images saved. {skip} 0 point layers.")
+        print(f"{count - skip}/{count} images saved. {skip} skipped 0 point layers.")
         print("Processing complete.")
         
 
     except Exception as e:
         print(f"Error generating images: {e}")
-        
-def load_gcode(gcode_path):
-    x, y, z = parse_gcode(gcode_path)
-    if x.size == 0:
-        print("Error: No valid G-code data to process.")
 
 def last_layer(gcode_path):
-    z = parse_gcode_silent(gcode_path)
-    last_layer = int(np.max(z) / 0.2) + 1
+    x, y, z = parse_gcode_silent(gcode_path)
+    last_layer =  int(np.max(z) / 0.2) + 1
     print(f"Last layer is {last_layer}")
 
     return last_layer
