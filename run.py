@@ -1,17 +1,18 @@
 import gcodie as gc
 import random
 
-gcode_path = 'dragon.gcode'  # Replace with your G-code file path
+gcode_path = 'dino.gcode'  # Replace with your G-code file path
 output_dir = 'frames'
 
-#gc.echo(args=False)
+#gc.print_status(args=False)
 
 #layer = 0
 #count = 10
 
 # Parse G-code to get the print path
+gc.tidy()
 
-x, y, z = gc.parse_gcode_silent(gcode_path)
+x, y, z = gc.parse_gcode(gcode_path)
 # x, y, z = gc.parse_gcode(gcode_path)
 
 if x.size == 0:
@@ -32,7 +33,9 @@ for count in range(first, last):
 
 #gc.generate_layer_img(layer ,x, y, z, output_dir, bg_color="#f8f8f8", layer_color="#000000", image_size=(400, 400))
 
-gc.generate_multiple_layers(count, x, y, z, output_dir, bg_color="#000000", layer_color="#ffffff", image_size=(800, 800))
+#gc.generate_multiple_layers(count, x, y, z, output_dir, bg_color="#000000", layer_color="#ffffff", image_size=(800, 800))
+
+gc.generate_all_layers(x, y, z, output_dir, bg_color="#000000", layer_color="#ff007b", image_size=(800, 800), make_animation=True)
 
 # pridat detekci 0 point layeru na single image
 #Last layer is 528
