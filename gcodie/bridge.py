@@ -2,6 +2,7 @@ import requests
 import json
 import time
 import os
+import re
 
 # This is the bridge.py that will be used to communicate with the 3d printer
 #  https://moonraker.readthedocs.io/en/latest/web_api/#get-system-info
@@ -52,7 +53,11 @@ def get_moonraker_print_status(printer_ip, port):
         print_duration = response['result']['status']['print_stats']['print_duration']
         filament_used = response['result']['status']['print_stats']['filament_used']
         z_pos = response['result']['status']['print_stats']['z_pos']
+
         filename = response['result']['status']['print_stats']['filename']
+
+        if filename == '':
+            filename = None
 
         #how to use the data in return:
         #def get_user_data():
@@ -70,7 +75,7 @@ def get_moonraker_print_status(printer_ip, port):
 
 def get_moonraker_progress(printer_ip, port):
     """
-    Retrieves the print progress from a Moonraker instance using HTTP.
+    Retrieves the print percentage from a Moonraker instance using HTTP.
 
     Args:
         printer_ip (str): The IP address of the printer running Moonraker.
@@ -94,7 +99,6 @@ def get_moonraker_progress(printer_ip, port):
         else:
             progress = progress * 100
     
-        # Handle the case where progress might be None
         if progress is not None:
             #stats(f"Progress: {progress:.2f}%")
             return progress  # Return as percentage

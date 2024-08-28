@@ -12,3 +12,19 @@ tedy cela nova package, pro komunikaci s Moonraker
 * teploty, bed a extruder
 * progress, procenta tisku, zbyvajici cas a CISLO LAYERU
 * a dalsi
+
+
+
+pridal jsem cache
+
+pri dokonceni printu se musi spustit funkce purge_cache(cache_dir=CACHE_DIR):
+
+cache_dir = gcode_cache
+
+
+28/8
+
+stahnout g code
+mozna pridat ip scanner
+detekce nic netisteni (idle, printing, waiting...)
+zacit delat na main.py :)

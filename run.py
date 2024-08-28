@@ -1,7 +1,7 @@
 import gcodie as gc
 import random
 
-gcode_path = 'dolp.gcode'  # Replace with your G-code file path
+gcode_path = 'gcode/dolp.gcode'  # Replace with your G-code file path
 output_dir = 'frames'
 
 #gc.print_status(args=False)
