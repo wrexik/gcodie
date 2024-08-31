@@ -9,8 +9,6 @@ output_dir = 'frames'
 #layer = 0
 #count = 10
 
-gc.print_status(args=False)
-
 #clears the screen
 
 #gc.tidy()

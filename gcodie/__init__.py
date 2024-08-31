@@ -1,15 +1,17 @@
-__all__ = ["generation", "utils", "parse", "ginfo", "server", "bridge"]
+__all__ = ["generation", "utils", "parse", "ginfo", "server", "get"]
 
 from .generation import *
 from .utils import *
 from .parse import *
 from .ginfo import *
 from .server import *
-from .bridge import *
+from .get import *
 
-print(r"""
+version = "v0.13"
+
+print(f"""
                   __      __   __   __     ___ 
                  / _` __ /  ` /  \ |  \ | |__  
-                 \__>    \__, \__/ |__/ | |___ 
+                 \__>    \__, \__/ |__/ | |___  {version}
       
       """)

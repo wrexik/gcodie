@@ -101,7 +101,7 @@ def get_moonraker_progress(printer_ip, port):
     
         if progress is not None:
             #stats(f"Progress: {progress:.2f}%")
-            return progress  # Return as percentage
+            return progress  # Return as percentagef
         else:
             stats("Progress information is not available.")
             return None
