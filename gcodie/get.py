@@ -12,7 +12,7 @@ import json
 
 from .utils import *
 
-def get_moonraker_print_status(printer_ip, port):
+def get_moonraker_stats(printer_ip, port):
 
     # Initialize variables
     response = None
@@ -45,10 +45,6 @@ def get_moonraker_print_status(printer_ip, port):
         current_layer = response['result']['status']['print_stats']['info']['current_layer']
         total_layer = response['result']['status']['print_stats']['info']['total_layer']
 
-        if current_layer and total_layer == None:
-            stats("Couldnt find the layer information")
-            layer_info = False
-
         state = response['result']['status']['print_stats']['state']
         print_duration = response['result']['status']['print_stats']['print_duration']
         filament_used = response['result']['status']['print_stats']['filament_used']
@@ -65,7 +61,7 @@ def get_moonraker_print_status(printer_ip, port):
         
         #----> name, age, id = get_user_data()
 
-        return(response, layer_info, state, print_duration, filament_used, z_pos, filename)
+        return(response, current_layer, total_layer, state, print_duration, filament_used, z_pos, filename)
     
 
     except requests.exceptions.RequestException as e:
@@ -109,3 +105,106 @@ def get_moonraker_progress(printer_ip, port):
     except requests.exceptions.RequestException as e:
         stats(f"An error occurred: {e}")
         return None
+    
+def get_moonraker_layer(printer_ip, port):
+    """
+    Retrieves the current layer and all layers information from a Moonraker instance using HTTP.
+
+    Args:
+        printer_ip (str): The IP address of the printer running Moonraker.
+        port (int): The port on which Moonraker is running.
+        filename (str): The name of the file being printed.
+
+    Returns:
+        tuple: The current layer number and total layer count, or None if an error occurs.
+    """
+
+    filename = get_moonraker_stats(printer_ip, port)[7]
+    progress = get_moonraker_progress(printer_ip, port)
+
+    url_gcode_move = f"http://{printer_ip}:{port}/printer/objects/query?gcode_move"
+    url_metadata = f"http://{printer_ip}:{port}/server/files/metadata?filename={filename}"
+
+    try:
+        # Get current position
+        response_gcode_move = requests.get(url_gcode_move)
+        response_gcode_move.raise_for_status()  # Raise an exception for HTTP errors
+        layer_info = response_gcode_move.json()
+
+        current_position = layer_info['result']['status']['gcode_move']['gcode_position'][2]
+
+        # Get layer height
+        response_metadata = requests.get(url_metadata)
+        response_metadata.raise_for_status()  # Raise an exception for HTTP errors
+        metadata = response_metadata.json()
+
+        layer_height = metadata['result']['layer_height']
+        layer_count = metadata['result']['layer_count']
+
+        # To not get invalid values
+        if int(progress) == 100:
+            current_layer = layer_count
+
+        else:
+            current_layer = current_position / layer_height
+
+        return int(current_layer), layer_count
+    
+    except requests.exceptions.RequestException as e:
+        stats(f"An error occurred: {e}")
+        return None
+    
+def get_current_file(printer_ip, port):
+    """
+    Retrieves the current file being printed from a Moonraker instance using HTTP.
+
+    Args:
+        printer_ip (str): The IP address of the printer running Moonraker.
+        port (int): The port on which Moonraker is running.
+
+    Returns:
+        str: The name of the file being printed, or None if an error occurs.
+    """
+    filename = get_moonraker_stats(printer_ip, port)[7]
+
+    cache_dir = "cache"
+
+    try:
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+
+        #check for old cache files
+        for file in os.listdir(cache_dir):
+            if file != filename:
+                os.remove(os.path.join(cache_dir, file))
+
+        if filename is not None:
+            if not os.path.exists(cache_dir):
+                os.makedirs(cache_dir)
+        
+        cache_file_path = os.path.join(cache_dir, filename.replace('/', '_'))
+
+        if os.path.exists(cache_file_path):
+            stats(f"File already cached: {cache_file_path}")
+            return cache_file_path
+
+        full_url = f"http://{printer_ip}:{port}/server/files/gcodes/{filename}"
+
+        try:
+            response = requests.get(full_url)
+            response.raise_for_status()
+            
+            with open(cache_file_path, 'w') as file:
+                file.write(response.text)
+            
+            stats(f"Cached file saved to {cache_file_path}")
+            return cache_file_path
+        
+        except requests.exceptions.RequestException as e:
+            stats(f"An error occurred while downloading the file: {e}")
+            return None
+        
+    except requests.exceptions.RequestException as e:
+        stats(f"An error occurred: {e}")
+        return None
+        

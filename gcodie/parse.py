@@ -24,17 +24,17 @@ def parse_gcode(file_path):
                         try:
                             current_position[0] = float(part[1:])
                         except ValueError:
-                            stats(f"Warning: Invalid X value '{part[1:]}' skipped.")
+                            stats(colored(f"Warning: Invalid X value '{part[1:]}' skipped.", "yellow"))
                     elif part.startswith('Y'):
                         try:
                             current_position[1] = float(part[1:])
                         except ValueError:
-                            stats(f"Warning: Invalid Y value '{part[1:]}' skipped.")
+                            stats(colored(f"Warning: Invalid Y value '{part[1:]}' skipped.", "yellow"))
                     elif part.startswith('Z'):
                         try:
                             current_position[2] = float(part[1:])
                         except ValueError:
-                            stats(f"Warning: Invalid Z value '{part[1:]}' skipped.")
+                            stats(colored(f"Warning: Invalid Z value '{part[1:]}' skipped.", "yellow"))
                 
                 # Store the current position after processing the line
                 x.append(current_position[0])
