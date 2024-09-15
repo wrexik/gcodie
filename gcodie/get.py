@@ -65,7 +65,8 @@ def get_moonraker_stats(printer_ip, port):
     
 
     except requests.exceptions.RequestException as e:
-        stats(f"An error occurred: {e}")
+        stats(colored(f"Couldnt reach moonraker at {printer_ip}:{port}: {e}", "red"))
+        stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
         return None
     
 
@@ -103,7 +104,8 @@ def get_moonraker_progress(printer_ip, port):
             return None
     
     except requests.exceptions.RequestException as e:
-        stats(f"An error occurred: {e}")
+        stats(colored(f"Couldnt reach moonraker at {printer_ip}:{port}: {e}", "red"))
+        stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
         return None
     
 def get_moonraker_layer(printer_ip, port):
@@ -118,9 +120,19 @@ def get_moonraker_layer(printer_ip, port):
     Returns:
         tuple: The current layer number and total layer count, or None if an error occurs.
     """
+    try:
+        filename = get_moonraker_stats(printer_ip, port)[7]
+    except Exception as e:
+        stats(colored(f"Couldnt reach moonraker at {printer_ip}:{port}: {e}", "red"))
+        stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
+        exit()
 
-    filename = get_moonraker_stats(printer_ip, port)[7]
-    progress = get_moonraker_progress(printer_ip, port)
+    try:
+        progress = get_moonraker_progress(printer_ip, port)
+    except Exception as e:
+        stats(colored(f"Couldnt reach moonraker at {printer_ip}:{port}: {e}", "red"))
+        stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
+        exit()
 
     url_gcode_move = f"http://{printer_ip}:{port}/printer/objects/query?gcode_move"
     url_metadata = f"http://{printer_ip}:{port}/server/files/metadata?filename={filename}"
@@ -167,6 +179,7 @@ def get_current_file(printer_ip, port):
     """
     filename = get_moonraker_stats(printer_ip, port)[7]
 
+
     cache_dir = "cache"
 
     try:
@@ -201,10 +214,10 @@ def get_current_file(printer_ip, port):
             return cache_file_path
         
         except requests.exceptions.RequestException as e:
-            stats(f"An error occurred while downloading the file: {e}")
+            stats(colored(f"An error occurred while downloading the file: {e}", "red"))
             return None
         
     except requests.exceptions.RequestException as e:
-        stats(f"An error occurred: {e}")
+        stats(colored(f"Error: {e}", "red"))
         return None
         

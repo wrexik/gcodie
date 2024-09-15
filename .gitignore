@@ -11,4 +11,8 @@ dolp.gcode
 current_layer
 cache
 ideas.md
+run.py
+testing.py
+.gitignore
 
+animation

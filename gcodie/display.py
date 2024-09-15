@@ -32,7 +32,7 @@ def show_current_layer(printer_ip, port, image_size=(800, 800), bg_color="#00000
         stats("Layer already processed.")
         return
     else:
-        stats("New layer found.")
+        stats("New job found.")
         remove_files(output_dir)
 
     with open(os.path.join(output_dir, "current_layer.txt"), "w") as f:
