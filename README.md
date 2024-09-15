@@ -25,6 +25,7 @@ You just need to know the printer IP and Port!
 ## Examples
 Example output of print animation 😎
 
+
 ![alt text](git_repo/animation.gif)
 
 Considering the fact it was made only from G-code without simulation, it is very pretty.
