@@ -220,4 +220,82 @@ def get_current_file(printer_ip, port):
     except requests.exceptions.RequestException as e:
         stats(colored(f"Error: {e}", "red"))
         return None
+    
+def get_current_temps(printer_ip, port):
+    """
+    Retrieves the current temperatures of the printer from a Moonraker instance using HTTP.
+
+    Args:
+        printer_ip (str): The IP address of the printer running Moonraker.
+        port (int): The port on which Moonraker is running.
+
+    Returns:
+        dict: The current temperatures of the printer, or None if an error occurs.
+    """
+
+    # -> /printer/objects/query?extruder
+    # -> /printer/objects/query?heater_bed
+
+    try:
+        url_extruder = f"http://{printer_ip}:{port}/printer/objects/query?extruder"
+        url_heater_bed = f"http://{printer_ip}:{port}/printer/objects/query?heater_bed"
+
+        response_extruder = requests.get(url_extruder)
+        response_extruder.raise_for_status()  # Raise an exception for HTTP errors
+        response_heater_bed = requests.get(url_heater_bed)
+        response_heater_bed.raise_for_status()  # Raise an exception for HTTP errors
+
+        extruder_temps = response_extruder.json()
+        heater_bed_temps = response_heater_bed.json()
+
+        extruder_temps = extruder_temps['result']['status']['extruder']['temperature']
+        heater_bed_temps = heater_bed_temps['result']['status']['heater_bed']['temperature']
+        
+        stats(colored("\nTemps:" + f"""\nExtruder: {extruder_temps}\nBed: {heater_bed_temps}""", "cyan"))
+
+        return extruder_temps, heater_bed_temps
+    
+    except requests.exceptions.RequestException as e:
+        stats(colored(f"An error occurred: {e}", "red"))
+        return None
+    
+def get_current_powers(printer_ip, port):
+    """
+    Retrieves the current power percentage of the heating elements from a Moonraker instance using HTTP.
+
+    Args:
+        printer_ip (str): The IP address of the printer running Moonraker.
+        port (int): The port on which Moonraker is running.
+
+    Returns:
+        dict: The current power in %, or None if an error occurs.
+    """
+    # -> /printer/objects/query?extruder
+    # -> /printer/objects/query?heater_bed
+
+    #{'result': {'eventtime': 8972.150803832, 'status': {'extruder': {'temperature': 82.6, 'target': 0.0, 'power': 0.0, 'can_extrude': False, 'pressure_advance': 0.036, 'smooth_time': 0.04}}}}Bed: {'result': {'eventtime': 8972.401332999, 'status': {'heater_bed': {'temperature': 46.68, 'target': 0.0, 'power': 0.0}}}}
+
+    try:
+        url_extruder = f"http://{printer_ip}:{port}/printer/objects/query?extruder"
+        url_heater_bed = f"http://{printer_ip}:{port}/printer/objects/query?heater_bed"
+
+        response_extruder = requests.get(url_extruder)
+        response_extruder.raise_for_status()  # Raise an exception for HTTP errors
+        response_heater_bed = requests.get(url_heater_bed)
+        response_heater_bed.raise_for_status()  # Raise an exception for HTTP errors
+
+        extruder_power = response_extruder.json()
+        heater_bed_power = response_heater_bed.json()
+
+        extruder_power = extruder_power['result']['status']['extruder']['power']
+        heater_bed_power = heater_bed_power['result']['status']['heater_bed']['power']
+        
+        stats(colored("\nPower:" + f"""\nExtruder: {extruder_power}\nBed: {heater_bed_power}""", "cyan"))
+
+        return extruder_power, heater_bed_power
+    
+    except requests.exceptions.RequestException as e:
+        stats(colored(f"An error occurred: {e}", "red"))
+        return None
+
         
