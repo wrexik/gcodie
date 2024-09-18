@@ -298,4 +298,58 @@ def get_current_powers(printer_ip, port):
         stats(colored(f"An error occurred: {e}", "red"))
         return None
 
+
+def get_pause_print(printer_ip, port):
+    """
+    Pauses the print job on the printer using Moonraker.
+
+    Args:
+        printer_ip (str): The IP address of the printer running Moonraker.
+        port (int): The port on which Moonraker is running.
+
+    Returns:
+        bool: True if the print job was paused successfully, False otherwise.
+    """
+
+    url = f"http://{printer_ip}:{port}/api/printer/command"
+    data = {
+        "commands": ["PAUSE"]
+    }
+    
+    try:
+        response = requests.post(url, json=data)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        stats("Print job paused.")
+        return True
+    
+    except requests.exceptions.RequestException as e:
+        stats(colored(f"An error occurred: {e}", "red"))
+        return False
+    
+def get_resume_print(printer_ip, port):
+    """
+    Resumes the print job on the printer using Moonraker.
+
+    Args:
+        printer_ip (str): The IP address of the printer running Moonraker.
+        port (int): The port on which Moonraker is running.
+
+    Returns:
+        bool: True if the print job was resumed successfully, False otherwise.
+    """
+
+    url = f"http://{printer_ip}:{port}/api/printer/command"
+    data = {
+        "commands": ["RESUME"]
+    }
+    
+    try:
+        response = requests.post(url, json=data)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        stats("Print job resumed.")
+        return True
+    
+    except requests.exceptions.RequestException as e:
+        stats(colored(f"An error occurred: {e}", "red"))
+        return False
         
