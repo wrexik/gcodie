@@ -24,7 +24,14 @@ cache_dir = gcode_cache
 
 28/8
 
-stahnout g code
-mozna pridat ip scanner
-detekce nic netisteni (idle, printing, waiting...)
-zacit delat na main.py :)
+stahnout g code done
+
+mozna pridat ip scanner done
+
+detekce nic netisteni (idle, printing, waiting...) while true check
+
+zacit delat na main.py :) az bude display :)
+
+25/9
+
+jde se makat na ip scanneru, detekci tisteni
