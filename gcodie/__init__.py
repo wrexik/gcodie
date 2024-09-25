@@ -7,7 +7,10 @@ from .ginfo import *
 from .get import *
 from .display import *
 
-version = "v0.16"
+version = "v0.17"
+
+tidy()
+
 
 print(f"""
                   __      __   __   __     ___ 

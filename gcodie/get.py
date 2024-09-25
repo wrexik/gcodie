@@ -297,9 +297,48 @@ def get_current_powers(printer_ip, port):
     except requests.exceptions.RequestException as e:
         stats(colored(f"An error occurred: {e}", "red"))
         return None
+    
+def get_current_speed(printer_ip, port):
+    """
+    Retrieves the current speed of the printer from a Moonraker instance using HTTP.
+    args:
+        printer_ip (str): The IP address of the printer running Moonraker.
+        port (int): The port on which Moonraker is running.
+    Returns:
+        dict: The current speed of the printer, or None if an error occurs.
+    """
+    """
+        {
+        "speed_factor": 1.0,
+        "speed": 100.0,
+        "extrude_factor": 1.0,
+        "absolute_coordinates": true,
+        "absolute_extrude": false,
+        "homing_origin": [0.0, 0.0, 0.0, 0.0],
+        "position": [0.0, 0.0, 0.0, 0.0],
+        "gcode_position": [0.0, 0.0, 0.0, 0.0]
+        }
+    """
+
+    try:
+        url = f"http://{printer_ip}:{port}/printer/objects/query?gcode_move"
+
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        speed = response.json()
+        speed = speed['result']['status']['gcode_move']['speed']
+        
+        stats(colored(f"Speed: {speed}", "cyan"))
+
+        return speed
+    except requests.exceptions.RequestException as e:
+        stats(colored(f"An error occurred: {e}", "red"))
+        stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
+        return None
 
 
-def get_pause_print(printer_ip, port):
+def pause_print(printer_ip, port):
     """
     Pauses the print job on the printer using Moonraker.
 
@@ -311,13 +350,10 @@ def get_pause_print(printer_ip, port):
         bool: True if the print job was paused successfully, False otherwise.
     """
 
-    url = f"http://{printer_ip}:{port}/api/printer/command"
-    data = {
-        "commands": ["PAUSE"]
-    }
+    url = f"http://{printer_ip}:{port}/printer/print/pause"
     
     try:
-        response = requests.post(url, json=data)
+        response = requests.post(url)
         response.raise_for_status()  # Raise an exception for HTTP errors
         stats("Print job paused.")
         return True
@@ -325,8 +361,10 @@ def get_pause_print(printer_ip, port):
     except requests.exceptions.RequestException as e:
         stats(colored(f"An error occurred: {e}", "red"))
         return False
+
+
     
-def get_resume_print(printer_ip, port):
+def resume_print(printer_ip, port):
     """
     Resumes the print job on the printer using Moonraker.
 
@@ -338,13 +376,10 @@ def get_resume_print(printer_ip, port):
         bool: True if the print job was resumed successfully, False otherwise.
     """
 
-    url = f"http://{printer_ip}:{port}/api/printer/command"
-    data = {
-        "commands": ["RESUME"]
-    }
+    url = f"http://{printer_ip}:{port}/printer/print/resume"
     
     try:
-        response = requests.post(url, json=data)
+        response = requests.post(url)
         response.raise_for_status()  # Raise an exception for HTTP errors
         stats("Print job resumed.")
         return True
@@ -352,4 +387,80 @@ def get_resume_print(printer_ip, port):
     except requests.exceptions.RequestException as e:
         stats(colored(f"An error occurred: {e}", "red"))
         return False
+    
+def cancel_print(printer_ip, port):
+    """
+    Cancels the print job on the printer using Moonraker.
+
+    Args:
+        printer_ip (str): The IP address of the printer running Moonraker.
+        port (int): The port on which Moonraker is running.
+
+    Returns:
+        bool: True if the print job was canceled successfully, False otherwise.
+    """
+
+    url = f"http://{printer_ip}:{port}/printer/print/cancel"
+    
+    try:
+        response = requests.post(url)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        stats("Print job canceled.")
+        return True
+    
+    except requests.exceptions.RequestException as e:
+        stats(colored(f"An error occurred: {e}", "red"))
+        return False
+    
+def get_moonraker_state(printer_ip, port):
+    """
+    Retrieves the current state of the printer from a Moonraker instance using HTTP.
+
+    Args:
+        printer_ip (str): The IP address of the printer running Moonraker.
+        port (int): The port on which Moonraker is running.
+
+    Returns:
+        str: The current state of the printer, or None if an error occurs.
+    """
+    
+    try:
+        response, current_layer, total_layer, state, print_duration, filament_used, z_pos, filename = get_moonraker_stats(printer_ip, port)
+    except Exception as e:
+        stats(colored(f"Couldnt reach moonraker at {printer_ip}:{port}: {e}", "red"))
+        stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
+        exit()
+    
+    """
+    state: Current print state. Can be one of the following values:
+    "standby"
+    "printing"
+    "paused"
+    "complete"
+    "cancelled"
+    "error" - Note that if an error is detected the print will abort
+    """
+    
+    if state == "printing":
+        stats(colored(f"Printer is currently printing.", "green"))
+        return True, state
+    elif state == "paused":
+        stats(colored(f"Printer is currently paused.", "yellow"))
+        return False, state
+    elif state == "standby":
+        stats(f"Printer is currently in standby.", "yellow")
+        return False, state
+    elif state == "complete":
+        stats(f"Print is complete.", "green")
+        return False, state
+    elif state == "cancelled":
+        stats(colored(f"Print was cancelled.", "yellow"))
+        return False, state
+    elif state == "error":
+        stats(colored(f"Print encountered an error.", "red"))
+        return False, state
+        
+
+
+
         

@@ -1,14 +1,20 @@
 from datetime import datetime
 import os
+import time
 
 import colorama
 
 def stats(text):
     ctime = datetime.now().strftime("%H:%M:%S")
-    print(f"[Status  -  {ctime}] Gcodie✿  {text}")
+    flower = colored("✿", "magenta")
+    minus = colored("-", "magenta")
+    print(f"[Status  {minus}  {ctime}] Gcodie{flower}  {text}")
 
 # Clear the screen
 def tidy():
+    """
+    Clear the screen.
+    """
 
     global no_stats
 
@@ -66,3 +72,13 @@ def colored(text, color):
         str: The colored text.
     """
     return colorama.Fore.__dict__[color.upper()] + text + colorama.Fore.RESET
+
+def measure_execution_time(func):
+    def timed_execution(*args, **kwargs):
+        start_timestamp = time.time()
+        result = func(*args, **kwargs)
+        end_timestamp = time.time()
+        execution_duration = end_timestamp - start_timestamp
+        print(f"Function {func.__name__} took {execution_duration:.2f} seconds to execute")
+        return result
+    return timed_execution

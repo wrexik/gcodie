@@ -9,7 +9,7 @@ I will also design a case for the Raspberry Pi and display for this.
 
 In the future, there will also be an option to show temperatures and speeds like this ⬇️
 
-![example](git_repo/example.png)
+![example](docs/example.png)
 
 Please note, this is just Photoshopped in 2 minutes. It will be way better 💦
 
@@ -26,6 +26,6 @@ You just need to know the printer IP and Port!
 Example output of print animation 😎
 
 
-![alt text](git_repo/animation.gif)
+![alt text](docs/animation.gif)
 
 Considering the fact it was made only from G-code without simulation, it is very pretty.

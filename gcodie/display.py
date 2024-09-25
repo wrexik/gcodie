@@ -146,7 +146,9 @@ def animate_current_print(printer_ip, port, image_size=(800, 800), bg_color="#00
                 os.remove(os.path.join(output_dir, file))
     except Exception as e:
         stats(f"Error: {e}")
-        return  
+        return
+    
+
     
     
 
