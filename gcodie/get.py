@@ -160,6 +160,8 @@ def get_moonraker_layer(printer_ip, port):
         else:
             current_layer = current_position / layer_height
 
+        stats(colored("\nLayer info:" +  f"""\nCurrent layer: {int(current_layer)} \nTotal layeres: {int(layer_count)}""", "cyan"))
+
         return int(current_layer), layer_count
     
     except requests.exceptions.RequestException as e:

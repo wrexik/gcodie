@@ -2,6 +2,7 @@ from .utils import *
 from .get import *
 from .images import *
 from .parse import *
+from .utils import *
 
 
 from PIL import Image
@@ -30,7 +31,16 @@ def show_current_layer(printer_ip, port, image_size=(800, 800), bg_color="#00000
 
     if str(current_layer) == saved_layer:
         stats("Layer already processed.")
-        return
+
+        try:
+            path = os.path.abspath(os.path.join(output_dir, f"layer_{current_layer:03d}.png"))
+            img = Image.open(path)
+            img.show()
+            return path
+
+        except Exception as e:
+            stats(f"Error: {e}")
+            return
     else:
         stats("New job found.")
         remove_files(output_dir)
@@ -64,6 +74,8 @@ def show_current_layer(printer_ip, port, image_size=(800, 800), bg_color="#00000
     try:
         img = Image.open(path)
         img.show()
+        return path
+    
     except Exception as e:
         stats(f"Error: {e}")
         return
@@ -133,6 +145,7 @@ def animate_current_print(printer_ip, port, image_size=(800, 800), bg_color="#00
         path = os.path.join(output_dir, "animation.gif")
         img = Image.open(path)
         img.show()
+    
     except Exception as e:
         stats(f"Error: {e}")
         return
@@ -147,6 +160,8 @@ def animate_current_print(printer_ip, port, image_size=(800, 800), bg_color="#00
     except Exception as e:
         stats(f"Error: {e}")
         return
+    
+    return path
     
 
     
