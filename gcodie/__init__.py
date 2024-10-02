@@ -7,9 +7,7 @@ from .ginfo import *
 from .get import *
 from .display import *
 
-version = "v0.17"
-
-tidy()
+version = "v0.18"
 
 
 print(f"""

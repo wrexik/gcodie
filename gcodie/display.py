@@ -7,7 +7,7 @@ from .utils import *
 
 from PIL import Image
 
-def show_current_layer(printer_ip, port, image_size=(800, 800), bg_color="#000000", layer_color="#ff007b", output_dir="current_layer"):
+def get_current_layer_img(printer_ip, port, image_size=(800, 800), bg_color="#000000", layer_color="#ff007b", output_dir="current_layer"):
     """
     Display the current layer of a print job in a window.
     Args:
@@ -80,7 +80,7 @@ def show_current_layer(printer_ip, port, image_size=(800, 800), bg_color="#00000
         stats(f"Error: {e}")
         return
 
-def animate_current_print(printer_ip, port, image_size=(800, 800), bg_color="#000000", layer_color="#ffffff", output_dir="animation"):
+def get_animated_current_print(printer_ip, port, image_size=(800, 800), bg_color="#000000", layer_color="#ffffff", output_dir="animation"):
     """
     Display the current layer of a print job in a window.
     Args:
@@ -162,6 +162,7 @@ def animate_current_print(printer_ip, port, image_size=(800, 800), bg_color="#00
         return
     
     return path
+        
     
 
     

@@ -82,3 +82,22 @@ def measure_execution_time(func):
         print(f"Function {func.__name__} took {execution_duration:.2f} seconds to execute")
         return result
     return timed_execution
+
+def get_os():
+    """
+    Get the operating system.
+    Returns:
+        str: The operating system.
+    """
+    if os.name == "nt":
+        return "Windows"
+    elif os.name == "posix":
+        return "Linux"
+    
+def am_i_windows():
+    """
+    Check if the operating system is Windows.
+    Returns:
+        bool: True if the operating system is Windows, False otherwise.
+    """
+    return get_os() == "Windows"

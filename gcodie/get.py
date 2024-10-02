@@ -68,7 +68,6 @@ def get_moonraker_stats(printer_ip, port):
         stats(colored(f"Couldnt reach moonraker at {printer_ip}:{port}: {e}", "red"))
         stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
         return None
-    
 
 def get_moonraker_progress(printer_ip, port):
     """
@@ -339,7 +338,6 @@ def get_current_speed(printer_ip, port):
         stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
         return None
 
-
 def pause_print(printer_ip, port):
     """
     Pauses the print job on the printer using Moonraker.
@@ -364,8 +362,6 @@ def pause_print(printer_ip, port):
         stats(colored(f"An error occurred: {e}", "red"))
         return False
 
-
-    
 def resume_print(printer_ip, port):
     """
     Resumes the print job on the printer using Moonraker.
@@ -414,7 +410,7 @@ def cancel_print(printer_ip, port):
         stats(colored(f"An error occurred: {e}", "red"))
         return False
     
-def get_moonraker_state(printer_ip, port):
+def get_current_state(printer_ip, port):
     """
     Retrieves the current state of the printer from a Moonraker instance using HTTP.
 
