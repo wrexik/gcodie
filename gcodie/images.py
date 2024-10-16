@@ -159,8 +159,6 @@ def generate_multiple_layers(count, x, y, z, output_dir, bg_color, layer_color, 
 
 # Generate all layers, including skipped ones (skipped ones will be the last image repeated)
 def generate_all_layers(x, y, z, output_dir, bg_color, layer_color, image_size, make_animation):
-
-    global no_stats
     
     os.makedirs(output_dir, exist_ok=True)
     layers = int(np.max(z) / 0.2) + 1  # Calculate the total number of layers
