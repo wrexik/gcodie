@@ -1,5 +1,4 @@
 import gcodie as gc
-from gcodie_live import *
 
 import time
 import os
@@ -14,24 +13,20 @@ bg_color = "#000000"
 layer_color = "#ffffff"
 
 font_path = "C:/Windows/Fonts/Arial.ttf"  # Adjust the font path as needed for Windows
-
-
-global testing
-testing = True
-
-
 # Start of main.py
 
-async def get_layer(printer_ip, port, image_size, bg_color, layer_color, testing):
+debug = False
+
+async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
     # Generate the image for the current layer
     # Prepare for applying the stats to the image
 
     output_dir = "live_image"
 
-    if testing == True:
+    if debug == True:
         current_layer = 40
     else:
-        current_layer, _ = gc.get_current_layer(printer_ip, port)
+        current_layer, _ = gc.get_moonraker_layer(printer_ip, port)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -44,7 +39,7 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, testing
         saved_layer = None
 
     if str(current_layer) == saved_layer:
-        stats("Layer already processed.")
+        gc.stats("Layer already processed.")
         try:
             path = os.path.abspath(os.path.join(output_dir, f"layer_{current_layer:03d}.png"))
             img = Image.open(path)
@@ -61,7 +56,7 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, testing
         f.write(str(current_layer))
         f.close()
 
-    if testing == True:
+    if debug == True:
         gcode_path = os.path.join("tests", "test.gcode")
     else:
         try:
@@ -87,12 +82,12 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, testing
                 return
     return path
 
-async def get_current_stats(printer_ip, port, path, testing):
+async def get_current_stats(printer_ip, port, path, debug):
     # Write the temps, powers, and speed to the image
 
     output_dir = "live_image"
 
-    if testing == True:
+    if debug == True:
         current_state = 0.5
         extruder_temps = 200; heater_bed_temps = 60
         extruder_power = 0.5; heater_bed_power = 0.5
@@ -143,26 +138,35 @@ def measure_execution_time(func):
 @measure_execution_time
 def main():
     # Main logic and execution
+    if not os.path.exists("config.ini"):
+        gc.create_config()
+    gc.load_config()
+    config = gc.load_config()
 
-    if os.path.exists("config.ini"):
-        load_config.create_config()
+    try:
+        printer_ip = gc.get_config_value("PRINTER", "printer_ip")
+        port = int(gc.get_config_value("PRINTER", "port"))
 
-    load_config.load_config()
+        image_size = eval(gc.get_config_value("IMAGE", "image_size"))
+        bg_color = gc.get_config_value("IMAGE", "bg_color")
+        layer_color = gc.get_config_value("IMAGE", "layer_color")
+        font_path = gc.get_config_value("FONT", "font_path")
+        output_dir = gc.get_config_value("OUTPUT", "output_dir")
 
-    printer_ip = load_config.get_config_value("PRINTER", "printer_ip")
-    port = int(load_config.get_config_value("PRINTER", "port"))
+        debug_bool = gc.get_config_value("DEBUG", "debug")
+    except Exception as e:
+        gc.stats(f"Error in reading the config, try deleting: {e}")
+        return
 
-    image_size = eval(load_config.get_config_value("IMAGE", "image_size"))
-    bg_color = load_config.get_config_value("IMAGE", "bg_color")
-    layer_color = load_config.get_config_value("IMAGE", "layer_color")
+    if debug_bool == "True":
+        gc.stats(gc.colored("DEBUG MODE ENABLED", "red"))
+        debug = True
+    else:
+        debug = False
+        gc.stats(gc.colored("Config read ok", "green"))
 
-    font_path = load_config.get_config_value("FONT", "font_path")
-
-    output_dir = load_config.get_config_value("OUTPUT", "output_dir")
-
-    path = asyncio.run(get_layer(printer_ip, port, image_size, bg_color, layer_color, testing))
-    asyncio.run(get_current_stats(printer_ip, port, path, testing))
-    return
+    path = asyncio.run(get_layer(printer_ip, port, image_size, bg_color, layer_color, debug))
+    asyncio.run(get_current_stats(printer_ip, port, path, debug))
 
 # Run the main function
 if __name__ == "__main__":
