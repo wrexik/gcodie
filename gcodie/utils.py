@@ -8,7 +8,15 @@ def stats(text):
     ctime = datetime.now().strftime("%H:%M:%S")
     flower = colored("✿", "magenta")
     minus = colored("-", "magenta")
-    print(f"[Status  {minus}  {ctime}] Gcodie{flower}  {text}")
+
+    out = f"[Status  {minus}  {ctime}] Gcodie{flower}  {text}"
+
+    if text == "":
+        return out
+    else:
+        print(f"[Status  {minus}  {ctime}] Gcodie{flower}  {text}")
+
+    
 
 # Clear the screen
 def tidy():
@@ -22,7 +30,6 @@ def tidy():
         os.system('cls' if os.name == 'nt' else 'clear')
     except Exception as e:
         stats(f"Error while clearing the screen: {e}")
-    stats("Screen cleared")
 
 def clear_cache():
     """

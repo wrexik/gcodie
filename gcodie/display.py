@@ -93,7 +93,7 @@ def get_animated_current_print(printer_ip, port, image_size=(800, 800), bg_color
     try:
         gcode_path = get_current_file(printer_ip, port)
     except Exception as e:
-        stats(f"No print job found: {e}")
+        stats(f"No print job found")
         return
     
     if not os.path.exists(output_dir):
@@ -106,6 +106,7 @@ def get_animated_current_print(printer_ip, port, image_size=(800, 800), bg_color
             f.close()
     except Exception as e:
         current_job = None
+        return
     
     if gcode_path == current_job:
         stats("Print job already processed.")
@@ -150,12 +151,14 @@ def get_animated_current_print(printer_ip, port, image_size=(800, 800), bg_color
         stats(f"Error: {e}")
         return
     
+    current_layer = get_moonraker_layer(printer_ip, port)
+    
     try:
-        #delete all .png files in the output_dir
+        # delete all .png files in the output_dir except the current layer
         stats("Cleaning up...")
-        
+
         for file in os.listdir(output_dir):
-            if file.endswith(".png"):
+            if file.endswith(".png") and file != f"layer_{current_layer:03d}.png":
                 os.remove(os.path.join(output_dir, file))
     except Exception as e:
         stats(f"Error: {e}")

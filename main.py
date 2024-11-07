@@ -5,17 +5,8 @@ import os
 import asyncio
 from PIL import Image, ImageDraw, ImageFont
 
-printer_ip = "10.0.0.155"
-port = 7125
-
-image_size = (400, 400)
-bg_color = "#000000"
-layer_color = "#ffffff"
-
 font_path = "C:/Windows/Fonts/Arial.ttf"  # Adjust the font path as needed for Windows
 # Start of main.py
-
-debug = False
 
 async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
     # Generate the image for the current layer
@@ -27,6 +18,12 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
         current_layer = 40
     else:
         current_layer, _ = gc.get_moonraker_layer(printer_ip, port)
+        if current_layer == None:
+            gc.stats("No layer found. Exiting.")
+            return
+        if current_layer == 0:
+            gc.stats("No layer found. Exiting.")
+            return
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -42,8 +39,6 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
         gc.stats("Layer already processed.")
         try:
             path = os.path.abspath(os.path.join(output_dir, f"layer_{current_layer:03d}.png"))
-            img = Image.open(path)
-            img.show()
             return path
         except Exception as e:
             gc.stats(f"Error: {e}")
@@ -106,6 +101,9 @@ async def get_current_stats(printer_ip, port, path, debug):
         draw = ImageDraw.Draw(cl)
         font = ImageFont.truetype(font_path, 20)
 
+        if current_state != type(int):
+            current_state = 0
+
         text = [
             f"Ext: {extruder_temps}°",
             f"Bed: {heater_bed_temps}°",
@@ -120,10 +118,36 @@ async def get_current_stats(printer_ip, port, path, debug):
             draw.text(positions[i], line, fill="#FF00FF", font=font)
 
         output_image_path = os.path.join(output_dir, f"layer_with_stats_{os.path.basename(path)}")
+
         cl.save(output_image_path)
-        cl.show()
 
         return output_image_path
+    
+async def await_job(printer_ip, port):
+        
+    state, status = await check_printing(printer_ip, port)
+    
+    if state == True:
+        return True, status
+    else:
+        gc.stats("Awaiting job...")
+
+        current_time = gc.stats("")
+
+        for i in range(5):
+            dots = "." * i
+            print(current_time, end='', flush=True)
+            print(f"Update in {5 - i} seconds{dots}", end='\r', flush=True)
+            await asyncio.sleep(1)
+
+        gc.tidy()
+        print(f"""
+                  __      __   __   __     ___ 
+                 / _` __ /  ` /  \ |  \ | |__  
+                 \__>    \__, \__/ |__/ | |___
+      
+        """)
+        return False, status
 
 def measure_execution_time(func):
     def timed_execution(*args, **kwargs):
@@ -165,8 +189,37 @@ def main():
         debug = False
         gc.stats(gc.colored("Config read ok", "green"))
 
-    path = asyncio.run(get_layer(printer_ip, port, image_size, bg_color, layer_color, debug))
-    asyncio.run(get_current_stats(printer_ip, port, path, debug))
+    # Check if the printer is printing
+    if debug == False:
+        while True:
+            printing, _ = asyncio.run(await_job(printer_ip, port))
+            if printing == True:
+                path = asyncio.run(get_layer(printer_ip, port, image_size, bg_color, layer_color, debug))
+                asyncio.run(get_current_stats(printer_ip, port, path, debug))
+    else:
+        gc.stats("Passing the job check in debug mode")
+        path = asyncio.run(get_layer(printer_ip, port, image_size, bg_color, layer_color, debug))
+        asyncio.run(get_current_stats(printer_ip, port, path, debug))
+        
+
+
+
+async def check_printing(printer_ip, port):
+    try:
+        status, message = gc.get_current_state(printer_ip, port)
+    except Exception as e:
+        gc.stats(gc.colored(f"Printer might be unreachable: {e}", "red"))
+        gc.stats("Returing in 5 seconds. Check errors.")
+        gc.stats(" ")
+        time.sleep(5)
+
+        status = False
+        message = str(e)
+
+    if status == True:
+        return True, message
+    else:
+        return False, message
 
 # Run the main function
 if __name__ == "__main__":

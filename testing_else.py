@@ -29,7 +29,7 @@ def main():
     #gc.stats(gc.colored(f"""\nExtruder: {extruder_temp}\nBed: {heater_bed_temp}""", "cyan"))
     #gc.stats(gc.colored(f"""\nExtruder power: {extruder_power}\nBed power: {heater_bed_power}""", "cyan"))
 
-    gc.show_current_layer(printer_ip, port, image_size=(800, 800), bg_color="#000000", layer_color="#ffffff", output_dir="current_layer")
+    gc.get_animated_current_print(printer_ip, port, image_size=(800, 800), bg_color="#000000", layer_color="#ffffff", output_dir="current_layer")
 
     #gc.resume_print(printer_ip, port)
 

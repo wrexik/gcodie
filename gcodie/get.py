@@ -97,6 +97,7 @@ def get_moonraker_progress(printer_ip, port):
     
         if progress is not None:
             #stats(f"Progress: {progress:.2f}%")
+            stats(colored(f"\nProgress: \n{progress:.2f}%", "cyan"))
             return progress  # Return as percentagef
         else:
             stats("Progress information is not available.")
@@ -124,14 +125,12 @@ def get_moonraker_layer(printer_ip, port):
     except Exception as e:
         stats(colored(f"Couldnt reach moonraker at {printer_ip}:{port}: {e}", "red"))
         stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
-        exit()
 
     try:
         progress = get_moonraker_progress(printer_ip, port)
     except Exception as e:
         stats(colored(f"Couldnt reach moonraker at {printer_ip}:{port}: {e}", "red"))
         stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
-        exit()
 
     url_gcode_move = f"http://{printer_ip}:{port}/printer/objects/query?gcode_move"
     url_metadata = f"http://{printer_ip}:{port}/server/files/metadata?filename={filename}"
@@ -424,10 +423,10 @@ def get_current_state(printer_ip, port):
     
     try:
         response, current_layer, total_layer, state, print_duration, filament_used, z_pos, filename = get_moonraker_stats(printer_ip, port)
+        stats(colored(f"Status check success", "green"))
     except Exception as e:
-        stats(colored(f"Couldnt reach moonraker at {printer_ip}:{port}: {e}", "red"))
-        stats(colored("Check if your printer is connected to internet, set static IP", "yellow"))
-        exit()
+        stats("Error in checking the printer status")
+        return None
     
     """
     state: Current print state. Can be one of the following values:
@@ -446,10 +445,10 @@ def get_current_state(printer_ip, port):
         stats(colored(f"Printer is currently paused.", "yellow"))
         return False, state
     elif state == "standby":
-        stats(f"Printer is currently in standby.", "yellow")
+        stats(colored(f"Printer is currently in standby.", "yellow"))
         return False, state
     elif state == "complete":
-        stats(f"Print is complete.", "green")
+        stats(colored(f"Print is complete.", "green"))
         return False, state
     elif state == "cancelled":
         stats(colored(f"Print was cancelled.", "yellow"))
