@@ -12,7 +12,7 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
     # Generate the image for the current layer
     # Prepare for applying the stats to the image
 
-    output_dir = "live_image"
+    output_dir = "glive"
 
     if debug == True:
         current_layer = 40
@@ -44,7 +44,7 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
             gc.stats(f"Error: {e}")
             return
     else:
-        gc.stats("New job found.")
+        gc.stats("New layer found. Processing now!")
         gc.remove_files(output_dir)
 
     with open(os.path.join(output_dir, "current_layer.txt"), "w") as f:
@@ -80,48 +80,65 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
 async def get_current_stats(printer_ip, port, path, debug):
     # Write the temps, powers, and speed to the image
 
-    output_dir = "live_image"
+    gc.stats("Updating the image with stats")
+
+    output_dir = "glive"
 
     if debug == True:
-        current_state = 0.5
+        progress = 0.5
         extruder_temps = 200; heater_bed_temps = 60
         extruder_power = 0.5; heater_bed_power = 0.5
         current_speed = 50
     else:
         try:
-            current_state = gc.get_current_state(printer_ip, port)
+            progress = gc.get_moonraker_progress(printer_ip, port)
             extruder_temps, heater_bed_temps = gc.get_current_temps(printer_ip, port)
             extruder_power, heater_bed_power = gc.get_current_powers(printer_ip, port)
             current_speed = gc.get_current_speed(printer_ip, port)
+
+            # convert the speed to cm/s if value is > 4 digits
+            
+
         except Exception as e:
             gc.stats(f"Error: {e}")
             return
 
-    with Image.open(path) as cl:
-        draw = ImageDraw.Draw(cl)
-        font = ImageFont.truetype(font_path, 20)
+    if path:
+        with Image.open(path) as cl:
+            draw = ImageDraw.Draw(cl)
+            font = ImageFont.truetype(font_path, 20)
 
-        if current_state != type(int):
-            current_state = 0
+            if progress != type(int):
+                progress = int(progress)
 
-        text = [
-            f"Ext: {extruder_temps}°",
-            f"Bed: {heater_bed_temps}°",
-            f"{int(current_state * 100)}%",
-            f"{current_speed}mm/s"
-        ]
+            # Adjust the speed to fit within the image
+            if current_speed > 9999:
+                current_speed = f"{current_speed / 10:.1f} cm/s"
+            else:
+                current_speed = f"{current_speed} mm/s"
 
-        # Positions for the text elements
-        positions = [(150, 10), (150, 40), (10, 360), (300, 360)]
+            text = [
+                f"Ext: {extruder_temps}°",
+                f"Bed: {heater_bed_temps}°",
+                f"{int(progress)}%",
+                f"{current_speed}"
+            ]
 
-        for i, line in enumerate(text):
-            draw.text(positions[i], line, fill="#FF00FF", font=font)
+            # Positions for the text elements
+            positions = [(150, 10), (150, 40), (10, 360), (300, 360)]
 
-        output_image_path = os.path.join(output_dir, f"layer_with_stats_{os.path.basename(path)}")
+            for i, line in enumerate(text):
+                draw.text(positions[i], line, fill="#FF00FF", font=font)
 
-        cl.save(output_image_path)
+            output_image_path = os.path.join(output_dir, f"out.png")
 
-        return output_image_path
+            cl.save(output_image_path)
+
+            gc.stats("Updating done")
+
+            return output_image_path
+    else:
+        print("No image to display.")
     
 async def await_job(printer_ip, port):
         
@@ -141,12 +158,7 @@ async def await_job(printer_ip, port):
             await asyncio.sleep(1)
 
         gc.tidy()
-        print(f"""
-                  __      __   __   __     ___ 
-                 / _` __ /  ` /  \ |  \ | |__  
-                 \__>    \__, \__/ |__/ | |___
-      
-        """)
+        logo()
         return False, status
 
 def measure_execution_time(func):
@@ -159,12 +171,21 @@ def measure_execution_time(func):
         return result
     return timed_execution
 
+def logo():
+        print(f"""
+                  __      __   __   __     ___ 
+                 / _` __ /  ` /  \ |  \ | |__  
+                 \__>    \__, \__/ |__/ | |___  live
+      
+        """)
+
 @measure_execution_time
 def main():
     # Main logic and execution
     if not os.path.exists("config.ini"):
         gc.create_config()
     gc.load_config()
+
     config = gc.load_config()
 
     try:
@@ -194,12 +215,59 @@ def main():
         while True:
             printing, _ = asyncio.run(await_job(printer_ip, port))
             if printing == True:
-                path = asyncio.run(get_layer(printer_ip, port, image_size, bg_color, layer_color, debug))
-                asyncio.run(get_current_stats(printer_ip, port, path, debug))
+                # Clear previous
+                try:
+                    gc.remove_files(output_dir)
+                except Exception as e:
+                    pass
+
+                for i in range(5):
+                    dots = "." * i
+                    current_time = gc.stats("")
+                    print(current_time, end='', flush=True)
+                    print(f"Printing job found. Starting the loop in {5 - i} seconds{dots}", end='\r', flush=True)
+                    time.sleep(1)
+
+                # Start with the main loop for processing the layers
+                while True:
+                    # Check if the layers are correct (detect calibration process)
+                    current_layer, layer_count = gc.get_moonraker_layer(printer_ip, port)
+                    if current_layer > layer_count:
+                        gc.stats(gc.colored(f"Calibration detected ({current_layer} < {layer_count}). Waiting for 10s", "yellow"))
+                        time.sleep(10)
+                    else:
+                        # Check if the print job is completed if so, break the 1st loop
+                        progress = gc.get_moonraker_progress(printer_ip, port)
+                        if progress == 100:
+                            gc.stats("Print job completed. Checking for next one")
+                            time.sleep(3)
+                            break
+
+                        logo()
+
+                        # Process the current layer and stats
+                        path = asyncio.run(get_layer(printer_ip, port, image_size, bg_color, layer_color, debug))
+                        if path is None:
+                            print("Error: get_layer returned None")
+                        else:
+                            asyncio.run(get_current_stats(printer_ip, port, path, debug))
+                        
+                        # Wait for 3 seconds before updating
+                        for i in range(3):
+                            dots = "." * i
+                            current_time = gc.stats("")
+                            print(current_time, end='', flush=True)
+                            print(f"Update in {3 - i} seconds{dots}", end='\r', flush=True)
+                            time.sleep(1)
+                        gc.tidy()
+
     else:
         gc.stats("Passing the job check in debug mode")
         path = asyncio.run(get_layer(printer_ip, port, image_size, bg_color, layer_color, debug))
-        asyncio.run(get_current_stats(printer_ip, port, path, debug))
+        if path is None:
+            print("Error: get_layer returned None")
+        else:
+            asyncio.run(get_current_stats(printer_ip, port, path, debug))
         
 
 

@@ -58,7 +58,6 @@ def remove_files(directory):
                 os.unlink(file_path)
     except Exception as e:
         stats(f"Error while removing files: {e}")
-    stats("Files removed")
 
 def cleanup():
     """

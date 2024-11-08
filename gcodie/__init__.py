@@ -8,7 +8,7 @@ from .get import *
 from .display import *
 from .config import *
 
-version = "v0.19"
+version = "v0.9 test"
 
 
 print(f"""

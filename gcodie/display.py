@@ -43,7 +43,8 @@ def get_current_layer_img(printer_ip, port, image_size=(800, 800), bg_color="#00
             return
     else:
         stats("New job found.")
-        remove_files(output_dir)
+        last_layer = current_layer - 1
+        remove_files(f"layer_{last_layer:03d}.png")
 
     with open(os.path.join(output_dir, "current_layer.txt"), "w") as f:
         f.write(str(current_layer))
@@ -144,8 +145,6 @@ def get_animated_current_print(printer_ip, port, image_size=(800, 800), bg_color
 
     try:
         path = os.path.join(output_dir, "animation.gif")
-        img = Image.open(path)
-        img.show()
     
     except Exception as e:
         stats(f"Error: {e}")

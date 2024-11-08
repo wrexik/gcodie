@@ -96,8 +96,7 @@ def get_moonraker_progress(printer_ip, port):
             progress = progress * 100
     
         if progress is not None:
-            #stats(f"Progress: {progress:.2f}%")
-            stats(colored(f"\nProgress: \n{progress:.2f}%", "cyan"))
+            #stats(colored(f"\nProgress: \n{progress:.2f}%", "cyan"))
             return progress  # Return as percentagef
         else:
             stats("Progress information is not available.")
@@ -158,8 +157,9 @@ def get_moonraker_layer(printer_ip, port):
         else:
             current_layer = current_position / layer_height
 
-        stats(colored("\nLayer info:" +  f"""\nCurrent layer: {int(current_layer)} \nTotal layeres: {int(layer_count)}""", "cyan"))
-
+        #stats(colored("\nLayer info:" +  f"""\nCurrent layer: {int(current_layer)} \nTotal layeres: {int(layer_count)}""", "cyan"))
+        #stats(colored(f"Current layer: {int(current_layer)} Total layeres: {int(layer_count)}", "cyan"))
+        
         return int(current_layer), layer_count
     
     except requests.exceptions.RequestException as e:
@@ -251,7 +251,7 @@ def get_current_temps(printer_ip, port):
         extruder_temps = extruder_temps['result']['status']['extruder']['temperature']
         heater_bed_temps = heater_bed_temps['result']['status']['heater_bed']['temperature']
         
-        stats(colored("\nTemps:" + f"""\nExtruder: {extruder_temps}\nBed: {heater_bed_temps}""", "cyan"))
+        #stats(colored("\nTemps:" + f"""\nExtruder: {extruder_temps}\nBed: {heater_bed_temps}""", "cyan"))
 
         return extruder_temps, heater_bed_temps
     
@@ -290,7 +290,7 @@ def get_current_powers(printer_ip, port):
         extruder_power = extruder_power['result']['status']['extruder']['power']
         heater_bed_power = heater_bed_power['result']['status']['heater_bed']['power']
         
-        stats(colored("\nPower:" + f"""\nExtruder: {extruder_power}\nBed: {heater_bed_power}""", "cyan"))
+        #stats(colored("\nPower:" + f"""\nExtruder: {extruder_power}\nBed: {heater_bed_power}""", "cyan"))
 
         return extruder_power, heater_bed_power
     
@@ -329,7 +329,7 @@ def get_current_speed(printer_ip, port):
         speed = response.json()
         speed = speed['result']['status']['gcode_move']['speed']
         
-        stats(colored(f"Speed: {speed}", "cyan"))
+        #stats(colored(f"Speed: {speed}", "cyan"))
 
         return speed
     except requests.exceptions.RequestException as e:
