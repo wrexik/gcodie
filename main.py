@@ -5,7 +5,13 @@ import os
 import asyncio
 from PIL import Image, ImageDraw, ImageFont
 
-font_path = "C:/Windows/Fonts/Arial.ttf"  # Adjust the font path as needed for Windows
+# G L I V E
+# This is the optional main file to the Gcodie project
+# Program outputs the current layer of the print job with information on the same image
+# Has the basic logic to detect calibration and print job completion
+# gcodie is my library for interacting with Moonraker API and generating the images
+
+font_path = r"./rainbow100.ttf"  # Adjust the font path as needed for Windows
 # Start of main.py
 
 async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
@@ -15,7 +21,7 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
     output_dir = "glive"
 
     if debug == True:
-        current_layer = 40
+        current_layer = 39
     else:
         current_layer, _ = gc.get_moonraker_layer(printer_ip, port)
         if current_layer == None:
@@ -58,37 +64,46 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
             gcode_path = gc.get_current_file(printer_ip, port)
         except Exception as e:
             gc.stats(gc.colored(f"No print job found: {e}"), "red")
-            return
 
     x, y, z = gc.parse_gcode(gcode_path)
 
     try:
+        gc.stats(f"Generating image for layer {current_layer}")
         path = gc.generate_layer_img(current_layer, x, y, z, output_dir, bg_color, layer_color, image_size)
-    except Exception as e:
-        while True:
-            gc.stats(f"No points found for layer {current_layer}.")
-            gc.stats("Getting the next layer.")
-            try:
+
+        if path is None:
+            while True:
+
                 current_layer += 1
-                path = gc.generate_layer_img(current_layer, x, y, z, output_dir, bg_color, layer_color, image_size)
-                break
-            except Exception as e:
-                gc.stats(f"Error: {e}")
-                return
+
+                with open(os.path.join(output_dir, "current_layer.txt"), "w") as f:
+                    f.write(str(current_layer))
+                    f.close()
+                try:
+                    path = gc.generate_layer_img(current_layer, x, y, z, output_dir, bg_color, layer_color, image_size)
+                    break
+
+                except Exception as e:
+                    gc.stats(f"Error: {e}")
+
+    except Exception as e:
+        gc.stats(f"Error: {e}")
+        return
+            
     return path
 
 async def get_current_stats(printer_ip, port, path, debug):
     # Write the temps, powers, and speed to the image
 
-    gc.stats("Updating the image with stats")
+    gc.stats("Updating the image with stats:")
 
     output_dir = "glive"
 
     if debug == True:
-        progress = 0.5
+        progress = 100
         extruder_temps = 200; heater_bed_temps = 60
         extruder_power = 0.5; heater_bed_power = 0.5
-        current_speed = 50
+        current_speed = 3000
     else:
         try:
             progress = gc.get_moonraker_progress(printer_ip, port)
@@ -96,24 +111,47 @@ async def get_current_stats(printer_ip, port, path, debug):
             extruder_power, heater_bed_power = gc.get_current_powers(printer_ip, port)
             current_speed = gc.get_current_speed(printer_ip, port)
 
-            # convert the speed to cm/s if value is > 4 digits
-            
-
         except Exception as e:
             gc.stats(f"Error: {e}")
             return
 
     if path:
-        with Image.open(path) as cl:
+        with Image.open(path) as im:
+            # Scale the image to fit the stats
+            im = im.resize((380, 380))
+
+            cl = cl.canvas = Image.new("RGB", (400, 400))
+            cl.paste(im, (10, 10))
+
             draw = ImageDraw.Draw(cl)
             font = ImageFont.truetype(font_path, 20)
 
             if progress != type(int):
                 progress = int(progress)
 
-            # Adjust the speed to fit within the image
+            gc.stats(gc.colored(f"Extruder: {extruder_temps}°C | Bed: {heater_bed_temps}°C", "cyan"))
+            gc.stats(gc.colored(f"E-Power: {extruder_power} | B-Power: {heater_bed_power}", "cyan"))
+            gc.stats(gc.colored(f"Progress: {progress}% | Speed: {current_speed}", "cyan"))
+
+            #output stats as json to {output_dir}/stats.json
+
+            stats = {
+                "Extruder": extruder_temps,
+                "Bed": heater_bed_temps,
+                "Extruder Power": extruder_power,
+                "Bed Power": heater_bed_power,
+                "Progress": progress,
+                "Speed": current_speed
+            }
+
+            with open(os.path.join(output_dir, "stats.json"), "w") as f:
+                gc.stats("Writing stats to stats.json")
+                f.write(gc.json.dumps(stats))
+                f.close()
+
+            # convert the speed to cm/s if value is > 4 digits
             if current_speed > 9999:
-                current_speed = f"{current_speed / 10:.1f} cm/s"
+                current_speed = f"{current_speed / 1000:.1f} m/s"
             else:
                 current_speed = f"{current_speed} mm/s"
 
@@ -126,15 +164,30 @@ async def get_current_stats(printer_ip, port, path, debug):
 
             # Positions for the text elements
             positions = [(150, 10), (150, 40), (10, 360), (300, 360)]
+            done_position = (122, 360)
 
             for i, line in enumerate(text):
-                draw.text(positions[i], line, fill="#FF00FF", font=font)
+                draw.text(positions[i], line, fill="#ffffff", font=font)
+
+            # detect if the print job is completed
+
+            if progress < 100:
+                color = "#ffffff"
+            else:
+                draw.text(done_position, "Completed", fill="#ffffff", font=font)
+                color = "#00ff00"
+
+            # add progress bar 20 steps between progress and speed
+            draw.rectangle([10, 380, 310, 390], fill="#000000")
+            draw.rectangle([10, 380, 200, 390], outline="#ffffff")
+            draw.rectangle([10, 380, 10 + (progress * 2), 390], fill=color)
+
 
             output_image_path = os.path.join(output_dir, f"out.png")
 
             cl.save(output_image_path)
 
-            gc.stats("Updating done")
+            gc.stats(gc.colored("Done", "green"))
 
             return output_image_path
     else:

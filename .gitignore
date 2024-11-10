@@ -16,6 +16,8 @@ run.py
 testing.py
 .gitignore
 
+tests
+
 animation
 
 live_image

@@ -8,7 +8,7 @@ def last_layer(gcode_path):
     x, y, z = parse_gcode_silent(gcode_path)
     last_layer =  int(np.max(z) / 0.2) + 1
 
-    last_layer = last_layer - 1 # usually last layer is nothing
+    last_layer = last_layer - 1 # usually if not everytime last layer is nothing
 
     stats(f"Last layer is {last_layer}")
 

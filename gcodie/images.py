@@ -42,7 +42,7 @@ def generate_layer_img(layer, x, y, z, output_dir, bg_color, layer_color, image_
 
             else:
                 plt.close(fig)
-                stats(f"No points found for layer {layer}.")
+                stats(colored(f"No points found for layer {layer}.", "yellow"))
                 return
 
             # Calculate limits to center the visualization

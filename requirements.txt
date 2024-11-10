@@ -1,6 +1,7 @@
-Flask==3.0.3
+colorama==0.4.6
 matplotlib==3.9.2
-numpy==2.1.1
-Pillow==10.4.0
+numpy==1.25.2
+Pillow==10.0.1
+Pillow==11.0.0
 Requests==2.32.3
 tqdm==4.66.5
