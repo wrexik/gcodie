@@ -2,6 +2,7 @@ __pycache__
 .vscode
 frames
 .gitatributes
+.gitignore
 
 dino.gcode
 dragon.gcode
@@ -16,6 +17,7 @@ run.py
 testing.py
 .gitignore
 glive
+test.gcode
 
 tests
 

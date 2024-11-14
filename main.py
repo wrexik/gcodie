@@ -20,7 +20,7 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
     output_dir = "glive"
 
     if debug == True:
-        current_layer = 39
+        current_layer = 67
     else:
         current_layer, _ = gc.get_moonraker_layer(printer_ip, port)
         if current_layer == None:
@@ -90,7 +90,8 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
                     f.close()
                 try:
                     path = gc.generate_layer_img(current_layer, x, y, z, output_dir, bg_color, layer_color, image_size)
-                    break
+                    if path is not None:
+                        break
 
                 except Exception as e:
                     gc.stats(f"Error: {e}")
@@ -329,12 +330,13 @@ def main():
                         gc.tidy()
 
     else:
+        debug = True
         gc.stats("Passing the job check in debug mode")
         path = asyncio.run(get_layer(printer_ip, port, image_size, bg_color, layer_color, debug))
         if path is None:
             print("Error: get_layer returned None")
         else:
-            asyncio.run(get_current_stats(printer_ip, port, path, debug))
+            asyncio.run(get_current_stats(printer_ip, port, path, font_path, debug))
 
 # end of main.py
 
