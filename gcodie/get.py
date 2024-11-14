@@ -7,6 +7,10 @@ import re
 # This is the bridge.py that will be used to communicate with the 3d printer
 #  https://moonraker.readthedocs.io/en/latest/web_api/#get-system-info
 
+
+# API
+
+
 import socket
 import json
 
@@ -291,6 +295,8 @@ def get_current_powers(printer_ip, port):
         heater_bed_power = heater_bed_power['result']['status']['heater_bed']['power']
         
         #stats(colored("\nPower:" + f"""\nExtruder: {extruder_power}\nBed: {heater_bed_power}""", "cyan"))
+        extruder_power = round(extruder_power, 2)
+        heater_bed_power = round(heater_bed_power, 2)
 
         return extruder_power, heater_bed_power
     
@@ -328,6 +334,9 @@ def get_current_speed(printer_ip, port):
 
         speed = response.json()
         speed = speed['result']['status']['gcode_move']['speed']
+
+        speed = round(speed, 4)
+        
         
         #stats(colored(f"Speed: {speed}", "cyan"))
 

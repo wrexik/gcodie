@@ -11,7 +11,6 @@ from PIL import Image, ImageDraw, ImageFont
 # Has the basic logic to detect calibration and print job completion
 # gcodie is my library for interacting with Moonraker API and generating the images
 
-font_path = r"./rainbow100.ttf"  # Adjust the font path as needed for Windows
 # Start of main.py
 
 async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
@@ -51,7 +50,17 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
             return
     else:
         gc.stats("New layer found. Processing now!")
-        gc.remove_files(output_dir)
+        # Clear previous
+        try:
+            
+            ls = os.listdir(output_dir)
+            for item in ls:
+                if item.startswith("layer_"):
+                    os.remove(os.path.join(output_dir, item))
+            os.remove(os.path.join(output_dir, "current_layer.txt"))
+
+        except Exception as e:
+            gc.stats(f"Error while clearing previous layers: {e}")
 
     with open(os.path.join(output_dir, "current_layer.txt"), "w") as f:
         f.write(str(current_layer))
@@ -92,7 +101,7 @@ async def get_layer(printer_ip, port, image_size, bg_color, layer_color, debug):
             
     return path
 
-async def get_current_stats(printer_ip, port, path, debug):
+async def get_current_stats(printer_ip, port, path, font_path, debug):
     # Write the temps, powers, and speed to the image
 
     gc.stats("Updating the image with stats:")
@@ -163,7 +172,7 @@ async def get_current_stats(printer_ip, port, path, debug):
             ]
 
             # Positions for the text elements
-            positions = [(150, 10), (150, 40), (10, 360), (300, 360)]
+            positions = [(150, 10), (150, 40), (10, 360), (280, 360)]
             done_position = (122, 360)
 
             for i, line in enumerate(text):
@@ -232,7 +241,8 @@ def logo():
       
         """)
 
-@measure_execution_time
+#start of main.py
+
 def main():
     # Main logic and execution
     if not os.path.exists("config.ini"):
@@ -268,31 +278,32 @@ def main():
         while True:
             printing, _ = asyncio.run(await_job(printer_ip, port))
             if printing == True:
-                # Clear previous
-                try:
-                    gc.remove_files(output_dir)
-                except Exception as e:
-                    pass
+                
+                status_delay = 5
 
-                for i in range(5):
+                for i in range(status_delay):
                     dots = "." * i
                     current_time = gc.stats("")
                     print(current_time, end='', flush=True)
-                    print(f"Printing job found. Starting the loop in {5 - i} seconds{dots}", end='\r', flush=True)
+                    print(f"Printing job found. Starting the loop in {status_delay - i} seconds{dots}", end='\r', flush=True)
                     time.sleep(1)
 
                 # Start with the main loop for processing the layers
                 while True:
                     # Check if the layers are correct (detect calibration process)
                     current_layer, layer_count = gc.get_moonraker_layer(printer_ip, port)
+
+                    # not really a calibration but a check for the layer count
+                    # it isnt reaable
                     if current_layer > layer_count:
-                        gc.stats(gc.colored(f"Calibration detected ({current_layer} < {layer_count}). Waiting for 10s", "yellow"))
+                        gc.stats(gc.colored(f"Calibration detected ({current_layer} > {layer_count}). Waiting for 10s", "yellow"))
                         time.sleep(10)
+
                     else:
                         # Check if the print job is completed if so, break the 1st loop
                         progress = gc.get_moonraker_progress(printer_ip, port)
                         if progress == 100:
-                            gc.stats("Print job completed. Checking for next one")
+                            gc.stats("Print job completed. Checking for the next one")
                             time.sleep(3)
                             break
 
@@ -303,15 +314,18 @@ def main():
                         if path is None:
                             print("Error: get_layer returned None")
                         else:
-                            asyncio.run(get_current_stats(printer_ip, port, path, debug))
+                            asyncio.run(get_current_stats(printer_ip, port, path, font_path, debug))
                         
                         # Wait for 3 seconds before updating
-                        for i in range(3):
+                        up_delay = 3
+
+                        for i in range(up_delay):
                             dots = "." * i
                             current_time = gc.stats("")
                             print(current_time, end='', flush=True)
-                            print(f"Update in {3 - i} seconds{dots}", end='\r', flush=True)
+                            print(f"Update in {up_delay - i} seconds{dots}", end='\r', flush=True)
                             time.sleep(1)
+
                         gc.tidy()
 
     else:
@@ -321,9 +335,8 @@ def main():
             print("Error: get_layer returned None")
         else:
             asyncio.run(get_current_stats(printer_ip, port, path, debug))
-        
 
-
+# end of main.py
 
 async def check_printing(printer_ip, port):
     try:
